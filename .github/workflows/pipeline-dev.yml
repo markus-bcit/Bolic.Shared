@@ -1,59 +1,99 @@
-#
-name: Create and publish a Docker image
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-# Configures this workflow to run every time a change is pushed to the branch called `release`.
+name: publish
 on:
   push:
-    branches: ['develop']
+    branches:
+      - 'develop'       # Run the workflow when pushing to the main branch
 
-# Defines two custom environment variables for the workflow. These are used for the Container registry domain, and a name for the Docker image that this workflow builds.
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+  NuGetDirectory: ${{ github.workspace}}/nuget
 
-# There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
+defaults:
+  run:
+    shell: pwsh
+
 jobs:
-  build-and-push-image:
+  create_nuget:
     runs-on: ubuntu-latest
-    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
-      #
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      # Uses the `docker/login-action` action to log in to the Container registry registry using the account and password that will publish the packages. Once published, the packages are scoped to the account defined here.
-      - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+      - uses: actions/checkout@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # This step uses [docker/metadata-action](https://github.com/docker/metadata-action#about) to extract tags and labels that will be applied to the specified image. The `id` "meta" allows the output of this step to be referenced in a subsequent step. The `images` value provides the base name for the tags and labels.
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
-      # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see [Usage](https://github.com/docker/build-push-action#usage) in the README of the `docker/build-push-action` repository.
-      # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
-      - name: Build and push Docker image
-        id: push
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          fetch-depth: 0 # Get all history to allow automatic versioning using MinVer
       
-      # This step generates an artifact attestation for the image, which is an unforgeable statement about where and how it was built. It increases supply chain security for people who consume the image. For more information, see [Using artifact attestations to establish provenance for builds](/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds).
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v2
+      # Install the .NET SDK indicated in the global.json file
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+      
+      # Create the NuGet package in the folder from the environment variable NuGetDirectory
+      - run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
+      
+      # Publish the NuGet package as an artifact, so they can be used in the following jobs
+      - uses: actions/upload-artifact@v3
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+          name: nuget
+          if-no-files-found: error
+          retention-days: 7
+          path: ${{ env.NuGetDirectory }}/*.nupkg
+
+  validate_nuget:
+    runs-on: ubuntu-latest
+    needs: [ create_nuget ]
+    steps:
+      # Install the .NET SDK indicated in the global.json file
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+
+      # Download the NuGet package created in the previous job
+      - uses: actions/download-artifact@v3
+        with:
+          name: nuget
+          path: ${{ env.NuGetDirectory }}
+
+      - name: Install nuget validator
+        run: dotnet tool update Meziantou.Framework.NuGetPackageValidation.Tool --global
+
+      # Validate metadata and content of the NuGet package
+      # https://www.nuget.org/packages/Meziantou.Framework.NuGetPackageValidation.Tool#readme-body-tab
+      # If some rules are not applicable, you can disable them
+      # using the --excluded-rules or --excluded-rule-ids option
+      - name: Validate package
+        run: meziantou.validate-nuget-package (Get-ChildItem "${{ env.NuGetDirectory }}/*.nupkg")
+
+  run_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+      - name: Run tests
+        run: dotnet test --configuration Release
+
+  deploy:
+    # Publish only when creating a GitHub Release
+    # https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
+    # You can update this logic if you want to manage releases differently
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    needs: [ validate_nuget, run_test ]
+    steps:
+      # Download the NuGet package created in the previous job
+      - uses: actions/download-artifact@v3
+        with:
+          name: nuget
+          path: ${{ env.NuGetDirectory }}
+
+      # Install the .NET SDK indicated in the global.json file
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+
+      # Publish all NuGet packages to NuGet.org
+      # Use --skip-duplicate to prevent errors if a package with the same version already exists.
+      # If you retry a failed workflow, already published packages will be skipped without error.
+      - name: Publish NuGet package
+        run: |
+          foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
+              dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          }
