@@ -72,6 +72,7 @@ jobs:
         run: dotnet test --configuration Release
   deploy:
     runs-on: ubuntu-latest
+    environment: develop
     needs: [ run_test, create_nuget ]
     steps:
       - uses: actions/download-artifact@v4
