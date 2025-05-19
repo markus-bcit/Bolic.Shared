@@ -67,6 +67,6 @@ jobs:
   
       - name: Publish NuGet package to GitHub Packages
         run: |
-          dotnet nuget push "${{ env.NuGetDirectory }}/Bolic.Shared.Core.1.0.${{ github.run_number }}.nupkg" --api-key "${{ secrets.PACKAGE_TOKEN }}" --source github --skip-duplicate
           dotnet nuget push "${{ env.NuGetDirectory }}/Bolic.Shared.Database.1.0.${{ github.run_number }}.nupkg" --api-key "${{ secrets.PACKAGE_TOKEN }}" --source github --skip-duplicate
           dotnet nuget push "${{ env.NuGetDirectory }}/Bolic.Shared.Tap.1.0.${{ github.run_number }}.nupkg" --api-key "${{ secrets.PACKAGE_TOKEN }}" --source github --skip-duplicate
+          dotnet nuget push "${{ env.NuGetDirectory }}/Bolic.Shared.Core.1.0.${{ github.run_number }}.nupkg" --api-key "${{ secrets.PACKAGE_TOKEN }}" --source github --skip-duplicate
