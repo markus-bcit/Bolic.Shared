@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bolic.Shared", "Bolic.Shared\Bolic.Shared.csproj", "{2BCBB278-9098-49F6-A8A3-E25CC45D0126}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bolic.Shared.Core", "Bolic.Shared.Core\Bolic.Shared.Core.csproj", "{2BCBB278-9098-49F6-A8A3-E25CC45D0126}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bolic.Shared.Database", "Bolic.Shared.Database\Bolic.Shared.Database.csproj", "{99E6C456-27BC-4C3E-9584-E17BADC6DAD0}"
 EndProject

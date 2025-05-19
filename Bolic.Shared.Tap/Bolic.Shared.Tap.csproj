@@ -7,7 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Bolic.Shared\Bolic.Shared.csproj" />
+      <ProjectReference Include="..\Bolic.Shared.Core\Bolic.Shared.Core.csproj" />
     </ItemGroup>
 
 </Project>

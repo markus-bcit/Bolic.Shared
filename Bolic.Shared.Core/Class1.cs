@@ -1,4 +1,4 @@
-﻿namespace Bolic.Shared;
+﻿namespace Bolic.Shared.Core;
 
 public class Class1
 {
