@@ -64,11 +64,10 @@ jobs:
       - name: Add GitHub NuGet source
         run: |
           dotnet nuget add source --username "markus-bcit" --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/markus-bcit/index.json"
-      
-      - name: Push NuGet packages 
-        shell: bash
+
+      - name: Publish NuGet package to GitHub Packages
         run: |
-          for file in ${{ env.NuGetDirectory }}/*.nupkg; do
-            echo "Pushing $file"
-            dotnet nuget push "$file" --api-key "${{ secrets.PACKAGE_TOKEN }}" --source github --skip-duplicate
-          done
+          dotnet nuget push "${{ env.NuGetDirectory }}/Bolic.Shared.Core.1.0.${{ github.run_number }}.nupkg" --api-key "${{ secrets.PACKAGE_TOKEN }}" --source github --skip-duplicate
+          foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg) | Where-Object { $_.Name -notmatch "test" }) {
+              dotnet nuget push $file --api-key "${{ secrets.PACKAGE_TOKEN }}" --source github --skip-duplicate
+          }
