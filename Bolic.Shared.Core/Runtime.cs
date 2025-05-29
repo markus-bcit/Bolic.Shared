@@ -1,6 +1,7 @@
 using Azure.Identity;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Bolic.Shared.Core;
 
@@ -12,13 +13,14 @@ public class Runtime :
     public CosmosClient Cosmos { get; }
     public ILogger<Runtime> Logger { get; }
 
-    public Runtime()
+
+    public Runtime(ILogger<Runtime>? logger = null)
     {
         var cosmosUrl = Environment.GetEnvironmentVariable("CosmosConnection")
                         ?? throw new InvalidOperationException("Missing CosmosConnection");
 
         Cosmos = new CosmosClient(cosmosUrl, new DefaultAzureCredential());
-        Logger = LoggerFactory.Create(builder => builder.SetMinimumLevel(LogLevel.Information)).CreateLogger<Runtime>();
+        Logger = logger ?? new NullLogger<Runtime>();
     }
 
     static K<Eff<Runtime>, CosmosClient> Has<Eff<Runtime>, CosmosClient>.Ask =>
