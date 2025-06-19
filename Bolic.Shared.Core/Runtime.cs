@@ -1,7 +1,4 @@
 using Azure.Identity;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Bolic.Shared.Core;
 
