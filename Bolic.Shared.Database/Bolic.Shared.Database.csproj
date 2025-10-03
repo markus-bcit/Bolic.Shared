@@ -10,4 +10,8 @@
         <ProjectReference Include="..\Bolic.Shared.Core\Bolic.Shared.Core.csproj"/>
     </ItemGroup>
     
+    <ItemGroup>
+      <Folder Include="Implementation\" />
+    </ItemGroup>
+    
 </Project>
