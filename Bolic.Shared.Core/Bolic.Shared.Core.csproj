@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Azure.Core" Version="1.46.1"/>
+        <PackageReference Include="Azure.Identity" Version="1.14.0"/>
+        <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.50.0"/>
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="1.19.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
+        <PackageReference Include="LanguageExt.Core" Version="5.0.0-beta-54"/>
+        <PackageReference Include="LanguageExt.FSharp" Version="5.0.0-beta-54" />
+        <PackageReference Include="LanguageExt.Parsec" Version="5.0.0-beta-54" />
+        <PackageReference Include="LanguageExt.Pipes" Version="5.0.0-beta-50" />
+        <PackageReference Include="LanguageExt.Rx" Version="5.0.0-beta-54" />
+        <PackageReference Include="LanguageExt.Streaming" Version="5.0.0-beta-54" />
+        <PackageReference Include="LanguageExt.Sys" Version="5.0.0-beta-54" />
+        <PackageReference Include="LanguageExt.SysX" Version="4.4.8" />
+        <PackageReference Include="LanguageExt.Transformers" Version="4.4.8" />
+    </ItemGroup>
+
+</Project>

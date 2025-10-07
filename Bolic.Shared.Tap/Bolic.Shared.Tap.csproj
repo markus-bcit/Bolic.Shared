@@ -7,7 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Bolic.Shared\Bolic.Shared.csproj" />
+        <ProjectReference Include="..\Bolic.Shared.Core\Bolic.Shared.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="..\Bolic.Shared.Core\Global.cs">
+        <Link>Global.cs</Link>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
     </ItemGroup>
 
 </Project>

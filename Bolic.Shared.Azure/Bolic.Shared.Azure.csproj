@@ -5,5 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
+    <ItemGroup>
+        <ProjectReference Include="..\Bolic.Shared.Core\Bolic.Shared.Core.csproj"/>
+    </ItemGroup>
 </Project>
