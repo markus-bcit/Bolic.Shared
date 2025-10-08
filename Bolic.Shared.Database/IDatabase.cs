@@ -5,17 +5,17 @@ namespace Bolic.Shared.Database;
 
 public interface IDatabase
 {
-    Eff<Runtime, Either<DatabaseError, CreateResponse<T>>> Create<T>(CreateRequest<T> request) 
+    Eff<Runtime, Either<Exception, CreateResponse<T>>> CreateItem<T>(CreateRequest<T> request) 
         where T : class;
     
-    // Eff<Runtime, Either<DatabaseError, ReadResponse<T>>> Read<T>(ReadRequest request) 
-    //     where T : class;
-    //
-    // Eff<Runtime, Either<DatabaseError, UpdateResponse<T>>> Update<T>(UpdateRequest<T> request) 
-    //     where T : class;
-    //
-    // Eff<Runtime, Either<DatabaseError, DeleteResponse>> Delete(DeleteRequest request);
-    //
-    // Eff<Runtime, Either<DatabaseError, QueryResponse<T>>> Query<T>(QueryRequest request) 
-    //     where T : class;
+    Eff<Runtime, Either<Exception, ReadResponse<T>>> ReadItem<T>(ReadRequest request) 
+        where T : class;
+    
+    Eff<Runtime, Either<Exception, UpdateResponse<T>>> UpdateItem<T>(UpdateRequest<T> request) 
+        where T : class;
+    
+    Eff<Runtime, Either<Exception, DeleteResponse>> DeleteItem(DeleteRequest request);
+    
+    Eff<Runtime, Either<Exception, QueryResponse<T>>> QueryItem<T>(QueryRequest request) 
+        where T : class;
 }

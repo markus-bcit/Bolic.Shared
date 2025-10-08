@@ -4,7 +4,7 @@ using LanguageExt.Async;
 
 namespace Bolic.Shared.Database.Implementation;
 
-public class CosmosDatabase
+public static class CosmosDatabase
 {
     public static Eff<Runtime, Either<Exception, CreateResponse<T>>> CreateItem<T>(CreateRequest<T> request)
         where T : class =>
@@ -61,7 +61,7 @@ public class CosmosDatabase
                     var container = runtime.Cosmos
                         .GetContainer(request.Database.ToString(), request.Container.ToString());
 
-                    var response = Async.await(container.UpsertItemAsync((
+                    Async.await(container.UpsertItemAsync((
                         request.Id.ToString(),
                         new PartitionKey(request.UserId.ToString())
                     )));
