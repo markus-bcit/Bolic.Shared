@@ -1,6 +1,6 @@
 namespace Bolic.Shared.Tap;
 
-public class ITap
+public interface ITap
 {
     
 }

@@ -7,16 +7,16 @@ namespace Bolic.Shared.Tap;
 
 public static class Tap
 {
-    public static Eff<Runtime, Task<TapResult<T>>> Process<T>(HttpRequestData request)
+    public static Eff<Runtime, TapResult<T>> Process<T>(HttpRequestData request)
     {
-        return LanguageExt.Eff<Runtime, Task<TapResult<T>>>.Lift(_ => 
+        return LanguageExt.Eff<Runtime, TapResult<T>>.Lift(_ => 
             ProcessAsync<T>(request)
         );
     }
 
-    private static async Task<TapResult<T>> ProcessAsync<T>(HttpRequestData request)
+    private static TapResult<T> ProcessAsync<T>(HttpRequestData request)
     {
-        var body = await Utils.To<T>(request.Body);
+        var body = Utils.To<T>(request.Body);
         return new TapResult<T>(
             Method: request.Method,
             RequestUri: request.Url,
