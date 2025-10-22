@@ -65,5 +65,5 @@ public record DeleteResponse<T>(
 public record QueryResponse<T>(
     Seq<T> Documents,
     string UserId,
-    string ContinuationToken = default
+    string ContinuationToken = null! // TODO: implement
 ) where T : class;
