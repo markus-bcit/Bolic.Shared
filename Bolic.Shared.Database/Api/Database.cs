@@ -56,9 +56,10 @@ public record UpdateResponse<T>(
     string UserId
 ) where T : class;
 
-public record DeleteResponse(
-    bool Success,
-    string UserId
+public record DeleteResponse<T>(
+    T Document,
+    string UserId,
+    string Id
 );
 
 public record QueryResponse<T>(

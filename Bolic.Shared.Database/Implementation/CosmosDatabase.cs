@@ -13,15 +13,15 @@ public class CosmosDatabase
                 try
                 {
                     var container = runtime.Cosmos
-                        .GetContainer(request.Database.ToString(), request.Container.ToString());
+                        .GetContainer(request.Database, request.Container);
 
                     var response = Async.await(container.CreateItemAsync(
                         request.Document,
-                        new PartitionKey(request.UserId.ToString())
+                        new PartitionKey(request.UserId)
                     ));
 
-                    return Right(new CreateResponse<T>(response.Resource, request.UserId.ToString(),
-                        request.Id.ToString()));
+                    return Right(new CreateResponse<T>(response.Resource, request.UserId,
+                        request.Id));
                 }
                 catch (Exception ex)
                 {
@@ -37,13 +37,13 @@ public class CosmosDatabase
                 try
                 {
                     var container = runtime.Cosmos
-                        .GetContainer(request.Database.ToString(), request.Container.ToString());
+                        .GetContainer(request.Database, request.Container);
 
                     var response = Async.await(container.ReadItemAsync<T>(
-                        request.Id.ToString(),
-                        new PartitionKey(request.UserId.ToString())
+                        request.Id,
+                        new PartitionKey(request.UserId)
                     ));
-                    return Right(new ReadResponse<T>(response.Resource, request.Id.ToString()));
+                    return Right(new ReadResponse<T>(response.Resource, request.Id));
                 }
                 catch (Exception ex)
                 {
@@ -59,13 +59,13 @@ public class CosmosDatabase
                 try
                 {
                     var container = runtime.Cosmos
-                        .GetContainer(request.Database.ToString(), request.Container.ToString());
+                        .GetContainer(request.Database, request.Container);
 
                     var response = Async.await(container.UpsertItemAsync((
-                        request.Id.ToString(),
-                        new PartitionKey(request.UserId.ToString())
+                        request.Id,
+                        new PartitionKey(request.UserId)
                     )));
-                    return Right(new UpdateResponse<T>(request.Document, request.UserId.ToString()));
+                    return Right(new UpdateResponse<T>(request.Document, request.UserId));
                 }
                 catch (Exception ex)
                 {
@@ -81,10 +81,10 @@ public class CosmosDatabase
                 try
                 {
                     var container = runtime.Cosmos
-                        .GetContainer(request.Database.ToString(), request.Container.ToString());
+                        .GetContainer(request.Database, request.Container);
 
                     var response = container.GetItemQueryIterator<T>(
-                        request.Query.ToString()
+                        request.Query
                     );
 
                     IEnumerable<T> EnumerateAsync() // ToDo not sure if this actually works as intended
@@ -96,7 +96,30 @@ public class CosmosDatabase
                         }
                     }
 
-                    return Right(new QueryResponse<T>(new Seq<T>(EnumerateAsync()), request.UserId.ToString()));
+                    return Right(new QueryResponse<T>(new Seq<T>(EnumerateAsync()), request.UserId));
+                }
+                catch (Exception ex)
+                {
+                    return Left(ex);
+                }
+            }
+        );
+
+    public static Eff<Runtime, Either<Exception, DeleteResponse<T>>> DeleteItem<T>(CreateRequest<T> request)
+        where T : class =>
+        lift<Runtime, Either<Exception, DeleteResponse<T>>>(runtime =>
+            {
+                try
+                {
+                    var container = runtime.Cosmos
+                        .GetContainer(request.Database, request.Container);
+
+                    var response = Async.await(container.DeleteItemAsync<T>(request.Id,
+                        new PartitionKey(request.UserId)
+                    ));
+
+                    return Right(new DeleteResponse<T>(response.Resource, request.UserId,
+                        request.Id));
                 }
                 catch (Exception ex)
                 {
