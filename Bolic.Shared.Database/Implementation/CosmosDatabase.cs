@@ -126,4 +126,35 @@ public class CosmosDatabase
                 }
             }
         );
+    public static Eff<Runtime, Either<Exception, PatchResponse<T>>> PatchItem<T>(PatchRequest<T> request)
+        where T : class =>
+        lift<Runtime, Either<Exception, PatchResponse<T>>>(runtime =>
+        {
+            try
+            {
+                var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+
+                var patchOps = new List<PatchOperation>();
+                foreach (var prop in typeof(T).GetProperties())
+                {
+                    var value = prop.GetValue(request.Document);
+                    if (value != null)
+                    {
+                        patchOps.Add(PatchOperation.Replace($"/{prop.Name}", value));
+                    }
+                }
+
+                var response = Async.await(container.PatchItemAsync<T>(
+                    id: request.Id,
+                    partitionKey: new PartitionKey(request.UserId),
+                    patchOperations: patchOps
+                ));
+
+                return Right(new PatchResponse<T>(response.Resource, request.UserId, request.Id));
+            }
+            catch (Exception ex)
+            {
+                return Left(ex);
+            }
+        });
 }
