@@ -1,5 +1,3 @@
-using LanguageExt;
-
 namespace Bolic.Shared.Database.Api;
 
 public record CreateRequest<T>(
@@ -39,6 +37,13 @@ public record QueryRequest(
     string Container,
     string Database
 );
+public record PatchRequest<T>(
+    T Document,
+    string UserId,
+    string Id,
+    string Container,
+    string Database
+) where T : class;
 
 public record CreateResponse<T>(
     T Document,
@@ -66,4 +71,10 @@ public record QueryResponse<T>(
     Seq<T> Documents,
     string UserId,
     string ContinuationToken = null! // TODO: implement
+) where T : class;
+
+public record PatchResponse<T>(
+    T Document,
+    string UserId,
+    string Id
 ) where T : class;
