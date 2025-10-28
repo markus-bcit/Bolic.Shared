@@ -17,20 +17,7 @@ public static class Utils
     {
         using var reader = new StreamReader(stream);
         var body = Async.await(reader.ReadToEndAsync());
-
-        return Optional(body)
-            .Filter(b => !string.IsNullOrWhiteSpace(b))
-            .Bind(b =>
-            {
-                try
-                {
-                    var json = JsonConvert.DeserializeObject<T>(b);
-                    return Optional(json);
-                }
-                catch
-                {
-                    return Option<T>.None;
-                }
-            });
+        var obj = JsonConvert.DeserializeObject<T>(body);
+        return obj;
     }
 }
