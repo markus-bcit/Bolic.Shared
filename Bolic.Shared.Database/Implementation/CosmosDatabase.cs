@@ -151,14 +151,12 @@ public class CosmosDatabase
 
                     var value = prop.GetValue(request.Document);
 
-                    // only patch fields that are explicitly set (non-null)
                     if (value is not null)
                     {
                         patchOps.Add(PatchOperation.Replace($"/{propName}", value));
                     }
                 }
 
-// only call Patch if there are actually any changes
                 if (patchOps.Count > 0)
                 {
                     var response = Async.await(container.PatchItemAsync<T>(
