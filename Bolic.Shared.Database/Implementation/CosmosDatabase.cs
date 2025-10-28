@@ -55,24 +55,23 @@ public class CosmosDatabase
     public static Eff<Runtime, Either<Exception, UpdateResponse<T>>> UpdateItem<T>(UpdateRequest<T> request)
         where T : class =>
         lift<Runtime, Either<Exception, UpdateResponse<T>>>(runtime =>
+        {
+            try
             {
-                try
-                {
-                    var container = runtime.Cosmos
-                        .GetContainer(request.Database, request.Container);
+                var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
 
-                    var response = Async.await(container.UpsertItemAsync((
-                        request.Id,
-                        new PartitionKey(request.UserId)
-                    )));
-                    return Right(new UpdateResponse<T>(request.Document, request.UserId));
-                }
-                catch (Exception ex)
-                {
-                    return Left(ex);
-                }
+                var response = Async.await(container.UpsertItemAsync(
+                    request.Document,
+                    new PartitionKey(request.UserId)
+                ));
+
+                return Right(new UpdateResponse<T>(response.Resource, request.UserId));
             }
-        );
+            catch (Exception ex)
+            {
+                return Left(ex);
+            }
+        });
 
     public static Eff<Runtime, Either<Exception, QueryResponse<T>>> QueryItem<T>(QueryRequest request)
         where T : class =>
