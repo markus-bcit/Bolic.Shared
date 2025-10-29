@@ -13,15 +13,15 @@ public class CosmosDatabase
                 try
                 {
                     var container = runtime.Cosmos
-                        .GetContainer(request.Database.ToString(), request.Container.ToString());
+                        .GetContainer(request.Database, request.Container);
 
                     var response = Async.await(container.CreateItemAsync(
                         request.Document,
-                        new PartitionKey(request.UserId.ToString())
+                        new PartitionKey(request.UserId)
                     ));
 
-                    return Right(new CreateResponse<T>(response.Resource, request.UserId.ToString(),
-                        request.Id.ToString()));
+                    return Right(new CreateResponse<T>(response.Resource, request.UserId,
+                        request.Id));
                 }
                 catch (Exception ex)
                 {
@@ -37,13 +37,13 @@ public class CosmosDatabase
                 try
                 {
                     var container = runtime.Cosmos
-                        .GetContainer(request.Database.ToString(), request.Container.ToString());
+                        .GetContainer(request.Database, request.Container);
 
                     var response = Async.await(container.ReadItemAsync<T>(
-                        request.Id.ToString(),
-                        new PartitionKey(request.UserId.ToString())
+                        request.Id,
+                        new PartitionKey(request.UserId)
                     ));
-                    return Right(new ReadResponse<T>(response.Resource, request.Id.ToString()));
+                    return Right(new ReadResponse<T>(response.Resource, request.Id));
                 }
                 catch (Exception ex)
                 {
@@ -55,24 +55,23 @@ public class CosmosDatabase
     public static Eff<Runtime, Either<Exception, UpdateResponse<T>>> UpdateItem<T>(UpdateRequest<T> request)
         where T : class =>
         lift<Runtime, Either<Exception, UpdateResponse<T>>>(runtime =>
+        {
+            try
             {
-                try
-                {
-                    var container = runtime.Cosmos
-                        .GetContainer(request.Database.ToString(), request.Container.ToString());
+                var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
 
-                    var response = Async.await(container.UpsertItemAsync((
-                        request.Id.ToString(),
-                        new PartitionKey(request.UserId.ToString())
-                    )));
-                    return Right(new UpdateResponse<T>(request.Document, request.UserId.ToString()));
-                }
-                catch (Exception ex)
-                {
-                    return Left(ex);
-                }
+                var response = Async.await(container.UpsertItemAsync(
+                    request.Document,
+                    new PartitionKey(request.UserId)
+                ));
+
+                return Right(new UpdateResponse<T>(response.Resource, request.UserId));
             }
-        );
+            catch (Exception ex)
+            {
+                return Left(ex);
+            }
+        });
 
     public static Eff<Runtime, Either<Exception, QueryResponse<T>>> QueryItem<T>(QueryRequest request)
         where T : class =>
@@ -81,10 +80,10 @@ public class CosmosDatabase
                 try
                 {
                     var container = runtime.Cosmos
-                        .GetContainer(request.Database.ToString(), request.Container.ToString());
+                        .GetContainer(request.Database, request.Container);
 
                     var response = container.GetItemQueryIterator<T>(
-                        request.Query.ToString()
+                        request.Query
                     );
 
                     IEnumerable<T> EnumerateAsync() // ToDo not sure if this actually works as intended
@@ -96,7 +95,7 @@ public class CosmosDatabase
                         }
                     }
 
-                    return Right(new QueryResponse<T>(new Seq<T>(EnumerateAsync()), request.UserId.ToString()));
+                    return Right(new QueryResponse<T>(new Seq<T>(EnumerateAsync()), request.UserId));
                 }
                 catch (Exception ex)
                 {
@@ -104,4 +103,76 @@ public class CosmosDatabase
                 }
             }
         );
+
+    public static Eff<Runtime, Either<Exception, DeleteResponse<T>>> DeleteItem<T>(CreateRequest<T> request)
+        where T : class =>
+        lift<Runtime, Either<Exception, DeleteResponse<T>>>(runtime =>
+            {
+                try
+                {
+                    var container = runtime.Cosmos
+                        .GetContainer(request.Database, request.Container);
+
+                    var response = Async.await(container.DeleteItemAsync<T>(request.Id,
+                        new PartitionKey(request.UserId)
+                    ));
+
+                    return Right(new DeleteResponse<T>(response.Resource, request.UserId,
+                        request.Id));
+                }
+                catch (Exception ex)
+                {
+                    return Left(ex);
+                }
+            }
+        );
+
+    public static Eff<Runtime, Either<Exception, PatchResponse<T>>> PatchItem<T>(PatchRequest<T> request)
+        where T : class =>
+        lift<Runtime, Either<Exception, PatchResponse<T>>>(runtime =>
+        {
+            try
+            {
+                var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+
+                var patchOps = new List<PatchOperation>();
+
+                foreach (var prop in typeof(T).GetProperties())
+                {
+                    var propName = prop.Name;
+
+                    if (string.Equals(propName, "Id", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(propName, "UserId", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(propName, "_etag", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(propName, "_ts", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var value = prop.GetValue(request.Document);
+
+                    if (value is not null)
+                    {
+                        patchOps.Add(PatchOperation.Replace($"/{propName}", value));
+                    }
+                }
+
+                if (patchOps.Count > 0)
+                {
+                    var response = Async.await(container.PatchItemAsync<T>(
+                        id: request.Id,
+                        partitionKey: new PartitionKey(request.UserId),
+                        patchOperations: patchOps
+                    ));
+
+                    return Right(new PatchResponse<T>(response.Resource, request.UserId, request.Id));
+                }
+
+                return Right(new PatchResponse<T>(request.Document, request.UserId, request.Id)); // nothing to patch
+            }
+            catch (Exception ex)
+            {
+                return Left(ex);
+            }
+        });
 }
