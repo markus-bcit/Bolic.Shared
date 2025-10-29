@@ -8,10 +8,12 @@ namespace Bolic.Shared.Tap;
 
 public static class Tap
 {
-    public static Eff<Runtime, TapResult<T>> Process<T>(HttpRequestData request)
+    public static Eff<Runtime, TapResult<T>> Process<T>(HttpRequestData request,
+        JsonSerializerSettings? serializerSettings = null,
+        Func<Stream, T>? action = null)
     {
         return LanguageExt.Eff<Runtime, TapResult<T>>.Lift(_ =>
-            ProcessAsync<T>(request)
+            ProcessAsync(request, serializerSettings, action)
         );
     }
 
