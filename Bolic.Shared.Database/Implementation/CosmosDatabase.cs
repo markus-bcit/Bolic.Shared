@@ -134,41 +134,12 @@ public class CosmosDatabase
             try
             {
                 var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
-
-                var patchOps = new List<PatchOperation>();
-
-                foreach (var prop in typeof(T).GetProperties())
-                {
-                    var propName = prop.Name;
-
-                    if (string.Equals(propName, "Id", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(propName, "UserId", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(propName, "_etag", StringComparison.OrdinalIgnoreCase) ||
-                        string.Equals(propName, "_ts", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var value = prop.GetValue(request.Document);
-
-                    if (value is not null)
-                    {
-                        patchOps.Add(PatchOperation.Replace($"/{propName}", value));
-                    }
-                }
-
-                if (patchOps.Count > 0)
-                {
-                    var response = Async.await(container.PatchItemAsync<T>(
-                        id: request.Id,
-                        partitionKey: new PartitionKey(request.UserId),
-                        patchOperations: patchOps
-                    ));
-
-                    return Right(new PatchResponse<T>(response.Resource, request.UserId, request.Id));
-                }
-
-                return Right(new PatchResponse<T>(request.Document, request.UserId, request.Id)); // nothing to patch
+                var response = Async.await(container.PatchItemAsync<T>(
+                    id: request.Id,
+                    partitionKey: new PartitionKey(request.UserId),
+                    patchOperations: request.Operations
+                ));
+                return Right(new PatchResponse<T>(response.Resource, request.UserId, request.Id)); 
             }
             catch (Exception ex)
             {
