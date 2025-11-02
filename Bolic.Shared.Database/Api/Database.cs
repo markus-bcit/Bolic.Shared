@@ -42,7 +42,8 @@ public record PatchRequest<T>(
     string UserId,
     string Id,
     string Container,
-    string Database
+    string Database,
+    List<PatchOperation> Operations
 ) where T : class;
 
 public record CreateResponse<T>(
