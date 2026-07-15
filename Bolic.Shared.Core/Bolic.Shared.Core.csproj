@@ -4,6 +4,8 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+
+        <AzureCosmosDisableNewtonsoftJsonCheck>true</AzureCosmosDisableNewtonsoftJsonCheck>
     </PropertyGroup>
 
     <ItemGroup>
@@ -21,7 +23,4 @@
         <PackageReference Include="LanguageExt.Sys" Version="5.0.0-beta-77" />
     </ItemGroup>
 
-    <PropertyGroup>
-        <AzureCosmosDisableNewtonsoftJsonCheck>true</AzureCosmosDisableNewtonsoftJsonCheck>
-    </PropertyGroup>
 </Project>
