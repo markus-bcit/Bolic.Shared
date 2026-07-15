@@ -12,7 +12,6 @@
         <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.62.0-preview.0" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="2.52.0" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="11.0.0-preview.4.26230.115" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.5-beta1" />
         <PackageReference Include="LanguageExt.Core" Version="5.0.0-beta-77" />
         <PackageReference Include="LanguageExt.FSharp" Version="5.0.0-beta-77" />
         <PackageReference Include="LanguageExt.Parsec" Version="5.0.0-beta-77" />
