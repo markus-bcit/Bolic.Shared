@@ -10,3 +10,5 @@ global using LanguageExt.Traits.Domain;
 global using Microsoft.Azure.Cosmos;
 global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Logging.Abstractions;
+
+global using System.Text.Json;
