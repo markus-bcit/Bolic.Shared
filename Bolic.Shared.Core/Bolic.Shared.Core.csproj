@@ -21,4 +21,7 @@
         <PackageReference Include="LanguageExt.Sys" Version="5.0.0-beta-77" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <AzureCosmosDisableNewtonsoftJsonCheck>true</AzureCosmosDisableNewtonsoftJsonCheck>
+    </PropertyGroup>
 </Project>
