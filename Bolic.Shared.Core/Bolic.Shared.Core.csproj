@@ -4,8 +4,6 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <PackageReadmeFile>README.md</PackageReadmeFile>
-
         <AzureCosmosDisableNewtonsoftJsonCheck>true</AzureCosmosDisableNewtonsoftJsonCheck>
     </PropertyGroup>
 
@@ -22,7 +20,6 @@
         <PackageReference Include="LanguageExt.Rx" Version="5.0.0-beta-77" />
         <PackageReference Include="LanguageExt.Streaming" Version="5.0.0-beta-77" />
         <PackageReference Include="LanguageExt.Sys" Version="5.0.0-beta-77" />
-        <None Include="../../README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>
