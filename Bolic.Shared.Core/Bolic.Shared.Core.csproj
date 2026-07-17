@@ -8,7 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Core" Version="1.60.0" />
+        <PackageReference Include="Azure.Core" Version="1.57.0" />
+        <!--https://github.com/Azure/azure-sdk-for-net/issues/59961-->
         <PackageReference Include="Azure.Identity" Version="1.21.0" />
         <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.61.0" />
         <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="2.52.0" />
