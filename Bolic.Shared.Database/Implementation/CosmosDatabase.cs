@@ -75,6 +75,18 @@ public class CosmosDatabase
             );
             return new PatchResponse<T>(response.Resource, request.UserId, request.Id);
         });
+    
+    public static Eff<Runtime, Unit> UpsertBatch<T>(UpsertBatchRequest<T> request)
+        where T : class =>
+        liftEff<Runtime, Unit>(async runtime =>
+        {
+            var c = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var batch = c.CreateTransactionalBatch(new PartitionKey(request.UserId));
+            foreach (var item in request.Documents)
+                batch.UpsertItem(item);
+            await batch.ExecuteAsync();
+            return unit;
+        });
 
     private static async IAsyncEnumerable<T> Enumerate<T>(FeedIterator<T> iterator)
     {
