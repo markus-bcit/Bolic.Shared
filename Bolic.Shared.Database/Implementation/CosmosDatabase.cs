@@ -3,7 +3,7 @@ using Bolic.Shared.Database.Api;
 
 namespace Bolic.Shared.Database.Implementation;
 
-public class CosmosDatabase
+public class CosmosDatabase: IDatabase
 {
     public static Eff<Runtime, CreateResponse<T>> CreateItem<T>(CreateRequest<T> request)
         where T : class =>
