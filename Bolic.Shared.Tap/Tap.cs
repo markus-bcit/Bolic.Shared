@@ -2,41 +2,42 @@
 using Bolic.Shared.Tap.Models;
 using Microsoft.Azure.Functions.Worker.Http;
 using Bolic.Shared.Core.Utils;
-using Newtonsoft.Json;
 
 namespace Bolic.Shared.Tap;
 
 public static class Tap
 {
-    public static Eff<Runtime, TapResult<T>> Process<T>(HttpRequestData request,
-        JsonSerializerSettings? serializerSettings = null,
+    public static Eff<Runtime, TapResult<T>> Process<T>(
+        HttpRequestData request,
+        Func<HttpRequestData, Option<string>>? userIdExtractor = null,
+        JsonSerializerOptions? serializerSettings = null,
         Func<Stream, T>? action = null)
     {
-        return LanguageExt.Eff<Runtime, TapResult<T>>.Lift(_ =>
-            ProcessAsync(request, serializerSettings, action)
-        );
+        return liftEff<Runtime, TapResult<T>>(_ =>
+        {
+            var userId = userIdExtractor?.Invoke(request) ?? Option<string>.None;
+            return userId.Match(
+                Some: id => Right<Error, TapResult<T>>(ProcessAsync(request, serializerSettings, action, id)),
+                None: () => Left<Error, TapResult<T>>(Error.New(new TapAuthException(
+                    new TapError(401, "Unauthorized", "Missing or invalid authentication token")))));
+        });
     }
 
     private static TapResult<T> ProcessAsync<T>(
         HttpRequestData request,
-        JsonSerializerSettings? serializerSettings = null,
-        Func<Stream, T>? action = null)
+        JsonSerializerOptions? serializerSettings,
+        Func<Stream, T>? action,
+        Option<string> userId)
     {
-        Option<T> body;
-
-        if (action is null)
-        {
-            body = (T)Utils.To<T>(request.Body, serializerSettings);
-        }
-        else
-        {
-            body = action(request.Body);
-        }
+        var body = action is null
+            ? Utils.To<T>(request.Body, serializerSettings)
+            : liftEff(() => action(request.Body));
 
         return new TapResult<T>(
             Method: request.Method,
             RequestUri: request.Url,
-            Body: body
+            Body: body,
+            UserId: userId
         );
     }
 }

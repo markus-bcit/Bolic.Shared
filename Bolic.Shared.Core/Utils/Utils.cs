@@ -1,7 +1,3 @@
-using LanguageExt.Async;
-using Newtonsoft.Json;
-
-
 namespace Bolic.Shared.Core.Utils;
 
 public static class Utils
@@ -13,11 +9,10 @@ public static class Utils
         return Optional(body).Filter(b => !string.IsNullOrWhiteSpace(b));
     }
 
-    public static Option<T> To<T>(Stream stream, JsonSerializerSettings? serializerSettings = null)
-    {
-        using var reader = new StreamReader(stream);
-        var body = Async.await(reader.ReadToEndAsync());
-        var obj = JsonConvert.DeserializeObject<T>(body, serializerSettings);
-        return obj;
-    }
+    public static Eff<T> To<T>(Stream stream, JsonSerializerOptions? options = null) =>
+        liftEff(async () =>
+        {
+            var obj = await JsonSerializer.DeserializeAsync<T>(stream, options);
+            return obj ?? throw new JsonException($"Failed to deserialize {typeof(T).Name}");
+        });
 }

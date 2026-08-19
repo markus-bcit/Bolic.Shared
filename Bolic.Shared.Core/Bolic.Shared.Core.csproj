@@ -1,25 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AzureCosmosDisableNewtonsoftJsonCheck>true</AzureCosmosDisableNewtonsoftJsonCheck>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Core" Version="1.46.1"/>
-        <PackageReference Include="Azure.Identity" Version="1.14.0"/>
-        <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.50.0"/>
-        <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="1.19.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
-        <PackageReference Include="LanguageExt.Core" Version="5.0.0-beta-54"/>
-        <PackageReference Include="LanguageExt.FSharp" Version="5.0.0-beta-54" />
-        <PackageReference Include="LanguageExt.Parsec" Version="5.0.0-beta-54" />
+        <PackageReference Include="Azure.Core" Version="1.57.0" />
+        <!--https://github.com/Azure/azure-sdk-for-net/issues/59961-->
+        <PackageReference Include="Azure.Identity" Version="1.21.0" />
+        <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.61.0" />
+        <PackageReference Include="Microsoft.Azure.Functions.Worker.Core" Version="2.52.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.10" />
+        <PackageReference Include="LanguageExt.Core" Version="5.0.0-beta-77" />
+        <PackageReference Include="LanguageExt.FSharp" Version="5.0.0-beta-77" />
+        <PackageReference Include="LanguageExt.Parsec" Version="5.0.0-beta-77" />
         <PackageReference Include="LanguageExt.Pipes" Version="5.0.0-beta-50" />
-        <PackageReference Include="LanguageExt.Rx" Version="5.0.0-beta-54" />
-        <PackageReference Include="LanguageExt.Streaming" Version="5.0.0-beta-54" />
-        <PackageReference Include="LanguageExt.Sys" Version="5.0.0-beta-54" />
+        <PackageReference Include="LanguageExt.Rx" Version="5.0.0-beta-77" />
+        <PackageReference Include="LanguageExt.Streaming" Version="5.0.0-beta-77" />
+        <PackageReference Include="LanguageExt.Sys" Version="5.0.0-beta-77" />
     </ItemGroup>
 
 </Project>

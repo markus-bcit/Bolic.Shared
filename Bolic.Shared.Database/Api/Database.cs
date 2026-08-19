@@ -46,6 +46,13 @@ public record PatchRequest<T>(
     List<PatchOperation> Operations
 ) where T : class;
 
+public record UpsertBatchRequest<T>(
+    List<T> Documents,
+    string UserId,
+    string Container,
+    string Database
+) where T : class;
+
 public record CreateResponse<T>(
     T Document,
     string UserId,
@@ -79,3 +86,4 @@ public record PatchResponse<T>(
     string UserId,
     string Id
 ) where T : class;
+

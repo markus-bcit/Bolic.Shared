@@ -5,17 +5,27 @@ namespace Bolic.Shared.Database;
 
 public interface IDatabase
 {
-    Eff<Runtime, Either<DatabaseError, CreateResponse<T>>> Create<T>(CreateRequest<T> request) 
+    static abstract Eff<Runtime, CreateResponse<T>> CreateItem<T>(CreateRequest<T> request)
         where T : class;
-    
-    // Eff<Runtime, Either<DatabaseError, ReadResponse<T>>> Read<T>(ReadRequest request) 
-    //     where T : class;
-    //
-    // Eff<Runtime, Either<DatabaseError, UpdateResponse<T>>> Update<T>(UpdateRequest<T> request) 
-    //     where T : class;
-    //
-    // Eff<Runtime, Either<DatabaseError, DeleteResponse>> Delete(DeleteRequest request);
-    //
-    // Eff<Runtime, Either<DatabaseError, QueryResponse<T>>> Query<T>(QueryRequest request) 
-    //     where T : class;
+
+    static abstract Eff<Runtime, ReadResponse<T>> ReadItem<T>(ReadRequest request)
+        where T : class;
+
+    static abstract Eff<Runtime, UpdateResponse<T>> UpdateItem<T>(UpdateRequest<T> request)
+        where T : class;
+
+    static abstract Eff<Runtime, IAsyncEnumerable<T>> QueryItem<T>(QueryRequest request)
+        where T : class;
+
+    static abstract Eff<Runtime, QueryResponse<T>> QueryAll<T>(QueryRequest request)
+        where T : class;
+
+    static abstract Eff<Runtime, DeleteResponse<T>> DeleteItem<T>(CreateRequest<T> request)
+        where T : class;
+
+    static abstract Eff<Runtime, PatchResponse<T>> PatchItem<T>(PatchRequest<T> request)
+        where T : class;
+
+    static abstract Eff<Runtime, Unit> UpsertBatch<T>(UpsertBatchRequest<T> request)
+        where T : class;
 }

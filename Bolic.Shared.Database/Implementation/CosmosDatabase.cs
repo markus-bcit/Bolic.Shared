@@ -1,149 +1,97 @@
 using Bolic.Shared.Core;
 using Bolic.Shared.Database.Api;
-using LanguageExt.Async;
 
 namespace Bolic.Shared.Database.Implementation;
 
-public class CosmosDatabase
+public class CosmosDatabase: IDatabase
 {
-    public static Eff<Runtime, Either<Exception, CreateResponse<T>>> CreateItem<T>(CreateRequest<T> request)
+    public static Eff<Runtime, CreateResponse<T>> CreateItem<T>(CreateRequest<T> request)
         where T : class =>
-        lift<Runtime, Either<Exception, CreateResponse<T>>>(runtime =>
-            {
-                try
-                {
-                    var container = runtime.Cosmos
-                        .GetContainer(request.Database, request.Container);
-
-                    var response = Async.await(container.CreateItemAsync(
-                        request.Document,
-                        new PartitionKey(request.UserId)
-                    ));
-
-                    return Right(new CreateResponse<T>(response.Resource, request.UserId,
-                        request.Id));
-                }
-                catch (Exception ex)
-                {
-                    return Left(ex);
-                }
-            }
-        );
-
-    public static Eff<Runtime, Either<Exception, ReadResponse<T>>> ReadItem<T>(ReadRequest request)
-        where T : class =>
-        lift<Runtime, Either<Exception, ReadResponse<T>>>(runtime =>
-            {
-                try
-                {
-                    var container = runtime.Cosmos
-                        .GetContainer(request.Database, request.Container);
-
-                    var response = Async.await(container.ReadItemAsync<T>(
-                        request.Id,
-                        new PartitionKey(request.UserId)
-                    ));
-                    return Right(new ReadResponse<T>(response.Resource, request.Id));
-                }
-                catch (Exception ex)
-                {
-                    return Left(ex);
-                }
-            }
-        );
-
-    public static Eff<Runtime, Either<Exception, UpdateResponse<T>>> UpdateItem<T>(UpdateRequest<T> request)
-        where T : class =>
-        lift<Runtime, Either<Exception, UpdateResponse<T>>>(runtime =>
+        liftEff<Runtime, CreateResponse<T>>(async runtime =>
         {
-            try
-            {
-                var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
-
-                var response = Async.await(container.UpsertItemAsync(
-                    request.Document,
-                    new PartitionKey(request.UserId)
-                ));
-
-                return Right(new UpdateResponse<T>(response.Resource, request.UserId));
-            }
-            catch (Exception ex)
-            {
-                return Left(ex);
-            }
+            var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var response = await container.CreateItemAsync(request.Document, new PartitionKey(request.UserId));
+            return new CreateResponse<T>(response.Resource, request.UserId, request.Id);
         });
 
-    public static Eff<Runtime, Either<Exception, QueryResponse<T>>> QueryItem<T>(QueryRequest request)
+    public static Eff<Runtime, ReadResponse<T>> ReadItem<T>(ReadRequest request)
         where T : class =>
-        lift<Runtime, Either<Exception, QueryResponse<T>>>(runtime =>
-            {
-                try
-                {
-                    var container = runtime.Cosmos
-                        .GetContainer(request.Database, request.Container);
-
-                    var response = container.GetItemQueryIterator<T>(
-                        request.Query
-                    );
-
-                    IEnumerable<T> EnumerateAsync() // ToDo not sure if this actually works as intended
-                    {
-                        while (response.HasMoreResults)
-                        {
-                            foreach (var item in Async.await(response.ReadNextAsync()))
-                                yield return item;
-                        }
-                    }
-
-                    return Right(new QueryResponse<T>(new Seq<T>(EnumerateAsync()), request.UserId));
-                }
-                catch (Exception ex)
-                {
-                    return Left(ex);
-                }
-            }
-        );
-
-    public static Eff<Runtime, Either<Exception, DeleteResponse<T>>> DeleteItem<T>(CreateRequest<T> request)
-        where T : class =>
-        lift<Runtime, Either<Exception, DeleteResponse<T>>>(runtime =>
-            {
-                try
-                {
-                    var container = runtime.Cosmos
-                        .GetContainer(request.Database, request.Container);
-
-                    var response = Async.await(container.DeleteItemAsync<T>(request.Id,
-                        new PartitionKey(request.UserId)
-                    ));
-
-                    return Right(new DeleteResponse<T>(response.Resource, request.UserId,
-                        request.Id));
-                }
-                catch (Exception ex)
-                {
-                    return Left(ex);
-                }
-            }
-        );
-
-    public static Eff<Runtime, Either<Exception, PatchResponse<T>>> PatchItem<T>(PatchRequest<T> request)
-        where T : class =>
-        lift<Runtime, Either<Exception, PatchResponse<T>>>(runtime =>
+        liftEff<Runtime, ReadResponse<T>>(async runtime =>
         {
-            try
-            {
-                var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
-                var response = Async.await(container.PatchItemAsync<T>(
-                    id: request.Id,
-                    partitionKey: new PartitionKey(request.UserId),
-                    patchOperations: request.Operations
-                ));
-                return Right(new PatchResponse<T>(response.Resource, request.UserId, request.Id)); 
-            }
-            catch (Exception ex)
-            {
-                return Left(ex);
-            }
+            var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var response = await container.ReadItemAsync<T>(request.Id, new PartitionKey(request.UserId));
+            return new ReadResponse<T>(response.Resource, request.Id);
         });
+
+    public static Eff<Runtime, UpdateResponse<T>> UpdateItem<T>(UpdateRequest<T> request)
+        where T : class =>
+        liftEff<Runtime, UpdateResponse<T>>(async runtime =>
+        {
+            var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var response = await container.UpsertItemAsync(request.Document, new PartitionKey(request.UserId));
+            return new UpdateResponse<T>(response.Resource, request.UserId);
+        });
+
+    public static Eff<Runtime, IAsyncEnumerable<T>> QueryItem<T>(QueryRequest request)
+        where T : class =>
+        lift<Runtime, IAsyncEnumerable<T>>(runtime =>
+        {
+            var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var iterator = container.GetItemQueryIterator<T>(request.Query);
+            return Enumerate(iterator);
+        });
+
+    public static Eff<Runtime, QueryResponse<T>> QueryAll<T>(QueryRequest request)
+        where T : class =>
+        liftEff<Runtime, QueryResponse<T>>(async runtime =>
+        {
+            var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var iterator = container.GetItemQueryIterator<T>(request.Query);
+            var items = new List<T>();
+            while (iterator.HasMoreResults)
+                foreach (var item in await iterator.ReadNextAsync())
+                    items.Add(item);
+            return new QueryResponse<T>(toSeq(items), request.UserId);
+        });
+
+    public static Eff<Runtime, DeleteResponse<T>> DeleteItem<T>(CreateRequest<T> request)
+        where T : class =>
+        liftEff<Runtime, DeleteResponse<T>>(async runtime =>
+        {
+            var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var response = await container.DeleteItemAsync<T>(request.Id, new PartitionKey(request.UserId));
+            return new DeleteResponse<T>(response.Resource, request.UserId, request.Id);
+        });
+
+    public static Eff<Runtime, PatchResponse<T>> PatchItem<T>(PatchRequest<T> request)
+        where T : class =>
+        liftEff<Runtime, PatchResponse<T>>(async runtime =>
+        {
+            var container = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var response = await container.PatchItemAsync<T>(
+                id: request.Id,
+                partitionKey: new PartitionKey(request.UserId),
+                patchOperations: request.Operations
+            );
+            return new PatchResponse<T>(response.Resource, request.UserId, request.Id);
+        });
+    
+    public static Eff<Runtime, Unit> UpsertBatch<T>(UpsertBatchRequest<T> request)
+        where T : class =>
+        liftEff<Runtime, Unit>(async runtime =>
+        {
+            var c = runtime.Cosmos.GetContainer(request.Database, request.Container);
+            var batch = c.CreateTransactionalBatch(new PartitionKey(request.UserId));
+            foreach (var item in request.Documents)
+                batch.UpsertItem(item);
+            await batch.ExecuteAsync();
+            return unit;
+        });
+
+    private static async IAsyncEnumerable<T> Enumerate<T>(FeedIterator<T> iterator)
+    {
+        while (iterator.HasMoreResults)
+            foreach (var item in await iterator.ReadNextAsync())
+                yield return item;
+    }
 }
